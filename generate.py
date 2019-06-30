@@ -72,6 +72,7 @@ class GeneratorUI(object):
         return model
 
     def generate_one(self, all_topic):
+        # generate poems using cmd line
         beam_size = input("please input beam size>")
         beam_size = int(beam_size)
 
@@ -94,6 +95,7 @@ class GeneratorUI(object):
                 print(sen)
     
     def generate_whole_file(self, infile, outfile, all_topic, beam_size):
+        # generate poems given the first sentences from a file
         self.sess = tf.InteractiveSession(graph=g1)
         self.model = self.load_model(self.sess, beam_size)
         self.generator = Generator(
@@ -126,7 +128,7 @@ class GeneratorUI(object):
 
 def main(_):   
     ui = GeneratorUI()
-    #ui.generate_whole_file("poemtestin.txt", "poemout", True, 20)
+    #ui.generate_whole_file("input_firstlines.txt", "gen_poems.txt", True, 20)
     ui.generate_one(False)
     
 if __name__ == "__main__":

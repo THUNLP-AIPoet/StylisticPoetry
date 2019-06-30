@@ -1,5 +1,5 @@
-# StylisticPoetry
-Codes for Stylistic Chinese Poetry Generation via Unsupervised Style Disentanglement (EMNLP 2018)
+# Stylistic Poetry
+Developed by 清华大学人工智能研究院与社会人文计算研究中心. The codes basically come from our paper "Stylistic Chinese Poetry Generation via Unsupervised Style Disentanglement" (EMNLP 2018).
 
 ## Input files
 
@@ -11,13 +11,16 @@ text_train.pkl, text_dev.pkl and text_test.pkl: Corpus files for training, valid
 
 ## Main scripts
 
-model.py: The implementation of the SPG model.
-
-train.py: The interface for training.
-
-generate.py: The interface for testing.
+model.py: The implementation of the SPG model. The basis of this model is an LSTM encoder-decoder framework with attention mechanism.
 
 state.py: The hyper-parameter settings.
+
+train.py: The interface for training. Just setup the hyperparameters and use the command "python train.py".
+
+generate.py: The interface for testing. Given the first sentence as input, a whole poem with four lines will be generated.
+
+## Requirements
+tensorflow-gpu 1.12
 
 ## Cite
 If you find this code useful for your research, please kindly cite this paper:

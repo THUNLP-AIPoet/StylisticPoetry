@@ -95,9 +95,7 @@ class Yun():
                     self.yun_map[key].update({
                         yun:0
                         })
-        #print count
-        #print self.yun_map
-        #fout = open("result/yuncount.txt", "w")
+
         self.totalpoemlist()
         for word in self.yun_map:
             max_times = -1
@@ -109,10 +107,7 @@ class Yun():
             self.word_map.update({
                 word:[max_yun]
                 })
-        #for word in self.yun_map:
-            #print>>fout, word
-            #print>>fout, self.yun_map[word]
-            #print>>fout, self.word_map[word]
+
         count1 = 0
         count2 = 0
         delitem = []
@@ -120,17 +115,14 @@ class Yun():
             count1 += 1
             if len(self.mulword_map[tw]) > 1:
                 count2 +=1
-                #print >> fout, tw
-                #print >> fout, self.mulword_map[tw]
+
                 delitem.append(tw)
         for item in delitem:
             self.mulword_map.pop(item)
         for tw in self.mulword_map:
-            #print >>fout, tw,self.mulword_map[tw]
             if len(self.mulword_map[tw]) > 1:
                 print(tw)
-        #fout.close()
-        #print count1,count2,len(self.mulword_map)
+
         fyun = open("data/pkl/yun.pkl", "wb")
         pickle.dump(self.word_map, fyun)
         pickle.dump(self.mulword_map, fyun)
@@ -160,6 +152,7 @@ class Yun():
             update_mulword(threeword)
             
     def totalpoemlist(self):
+        # load the corpus to make sure the model won't generate existing sentences
         f = open("data/poemcorpus/totaljiantipoems_change.txt",'r')
         lines = f.readlines()
         f.close()
@@ -169,12 +162,6 @@ class Yun():
         dynasty = ""
         sen_list = []
         count = 0
-        #count1 = 0
-        #f1 = open("result/poem_duoyun.txt","w")
-        #count2 = 0
-        #f2 = open("result/poem_wuyun.txt","w")
-        #count3 = 0
-        #f3 = open("result/poem_queyun.txt","w")
         for line in lines:
             line = line.strip().split(" ")
             if line[0] == "Title":
@@ -188,24 +175,7 @@ class Yun():
                         tmp = [val for val in tmp if val in yun_list[i*2+1]]
                 else:
                     tmp = []
-                #if len(tmp) > 1:
-                #    print >> f1, title, author, dynasty
-                #    for sen in sen_list:    
-                #        print >> f1, sen
-                #    print >> f1, yun_list
-                #    count1 += 1
-                #if len(tmp) == 0:
-                #    print >> f2, title, author, dynasty
-                #    for sen in sen_list:    
-                #        print >> f2, sen
-                #    print >> f2, yun_list
-                #    count2 += 1
-                #if len(tmp) == 1 and tmp[0] == "-1":
-                #    print >> f3, title, author, dynasty
-                #    for sen in sen_list:    
-                #        print >> f3, sen
-                #    print >> f3, yun_list
-                #    count3 += 1
+
                 if len(tmp) > 1:
                     tmp = [val for val in tmp if val in yun_list[0]]
                 if len(tmp) == 1 and tmp[0] != "-1": # []:50366  ["-1"]: 7104  25967
@@ -227,13 +197,6 @@ class Yun():
                 sen_list.append(line[0])
 
         self.poemyun = poemyun
-        #print count1
-        #print count2
-        #print count3
-        #f1.close()
-        #f2.close()
-        #f3.close()
-
 
 if __name__ == "__main__":
     yun = Yun()

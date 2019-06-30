@@ -183,41 +183,8 @@ class PoemModel(object):
 
         # saver
         self.saver = tf.train.Saver(tf.all_variables(), write_version=tf.train.SaverDef.V1)
-    '''
-    def build_classifier_state_computer(self, emb_encoder_inputs):
 
-
-        with variable_scope.variable_scope(variable_scope.get_variable_scope(),  reuse=None):
-            with variable_scope.variable_scope("seq2seq_Classifier"):
-                encoder_cell_fw  = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
-                encoder_cell_bw = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
-
-                encoder_cell_fw =  tf.nn.rnn_cell.DropoutWrapper(encoder_cell_fw, output_keep_prob= self.keep_prob)
-                encoder_cell_bw = tf.nn.rnn_cell.DropoutWrapper(encoder_cell_bw, output_keep_prob= self.keep_prob)
-
-                (outputs , encoder_state_fw, encoder_state_bw)  = rnn.static_bidirectional_rnn(
-                    encoder_cell_fw, encoder_cell_bw, emb_encoder_inputs, dtype=tf.float32)
-
-                encoder_outputs = outputs
-
-
-                encoder_state_c =  encoder_state_bw[0]
-                encoder_state_m = encoder_state_bw[1]
-
-                with variable_scope.variable_scope("initial_transfor_c"):
-                    final_state_c = core_rnn_cell._linear(encoder_state_c,  self.hidden_size, True)
-                    final_state_c  = tf.tanh(final_state_c)
-
-                with variable_scope.variable_scope("initial_transfor_m"):
-                    final_state_m = core_rnn_cell._linear(encoder_state_m, self.hidden_size, True)
-                    final_state_m  = tf.tanh(final_state_m)
-                
-                final_state = tf.nn.rnn_cell.LSTMStateTuple(final_state_c, final_state_m)
-
-                infer_score = core_rnn_cell._linear(final_state, self.num_topic, True)
-                return infer_score
-    '''
-
+    # predict style given expected character embeddings
     def __build_classifier_state_computer_simple(self, emb_encoder_inputs_sum, length):
         infer_score = core_rnn_cell._linear(emb_encoder_inputs_sum / length, self.num_topic, True)
         return infer_score
@@ -228,6 +195,7 @@ class PoemModel(object):
         input_feed[self.embs_len]= emb_len
         return sess.run(self.infer_score, input_feed)
 
+    # Bi-LSTM to encode the first sentence
     def __build_encoder_state_computer(self, emb_encoder_inputs, encoder_mask):
         with variable_scope.variable_scope(variable_scope.get_variable_scope(),  reuse=None):
             with variable_scope.variable_scope("seq2seq_Encoder"):
@@ -256,7 +224,6 @@ class PoemModel(object):
                 
                 final_state = tf.nn.rnn_cell.LSTMStateTuple(final_state_c, final_state_m)
 
-
                 # First calculate a concatenation of encoder outputs to put attention on.
                 # cell.output_size is embedding_size
                 top_states = [array_ops.reshape(e, [-1, 1, encoder_cell_fw.output_size*2]) for e in encoder_outputs]
@@ -278,6 +245,7 @@ class PoemModel(object):
         outputs = session.run(output_feed, input_feed)
         return outputs[0], outputs[1]  # encoder_state, attention_states
 
+    # decoder LSTM with attention (single step)
     def __build_decoder_state_output_computer(self, cell, attentions, inp, prev_state, encoder_mask, batchYun, num_heads=1):
         '''
         attentions: encoder states  
@@ -391,12 +359,14 @@ class PoemModel(object):
 
         return outputs[0], outputs[1], outputs[2] # next_output, next_state, next_align
 
+    # compute the style re-identification loss
     def infer_loss(self, decoder_inputs, weights, expected_seq_j, col):
         seqtmp=[]
         for i in range(len(decoder_inputs)):
             seqtmp.append(tf.multiply(tf.matmul(expected_seq_j[i],tf.stop_gradient(self.decoder_embedding)), tf.stop_gradient(tf.tile(tf.expand_dims(weights[i],-1), [1,self.emb_size]))))
         retloss = -tf.reduce_mean(tf.slice(tf.transpose(tf.nn.log_softmax(self.__build_classifier_state_computer_simple(tf.add_n(seqtmp), len(seqtmp)))),[col,0],[1,-1]))
         return retloss
+    # compute the MLE loss and style prediction loss
     def __build_seq2seq(self, decoder_cell, encoder_inputs, decoder_inputs, targets, weights, encoder_mask, bucket, batchYun):
         
         with tf.variable_scope("Find"):

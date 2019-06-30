@@ -260,7 +260,7 @@ class PoemTrainer(object):
             line1 = self.greedy_decode(outline1)
             print ("#" + input1  + "#" + "       #"  + target1 + "#      #" + line1 + "#")
 
-    def train(self):
+    def train(self, warmup_steps=50000, max_steps=300000):
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction = 0.98)
         gpu_options.allow_growth = True
 
@@ -276,19 +276,16 @@ class PoemTrainer(object):
             time1 = time.time()
             balance = 1.0
 
-            while True:
+            while current_step <= max_steps:
                 # Get a batch and make a step.
                 start_time = time.time()
                 encoder_inputs, decoder_inputs, target_weights, encoder_mask, encoder_lda = self.get_next_batch(model.global_step.eval() , self.data, self.batch_size)
-                #print(decoder_inputs.shape)
-                
-                #print ("training!!!!!")
-                if current_step >50000:# and current_step <= 1000000:
+
+                if current_step >warmup_steps:
                     balance = 0.9
-                else:
+                else: # no style training in warmup steps
                     balance = 1.0  
                 _, step_loss, step_loss_class,  debug, outputs  = model.step(sess, encoder_inputs, decoder_inputs, target_weights, encoder_mask, self.vocab, self.ivocab, False, balance)
-                #print (np.shape(debug))
   
                 # do sample and validation
                 step_time += (time.time() - start_time) / FLAGS.steps_per_checkpoint
